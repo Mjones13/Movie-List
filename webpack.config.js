@@ -4,7 +4,7 @@ module.exports = {
     mode: "development",
     entry: "./Components/index.jsx",
     output: {
-        path: path.resolve(__dirname + "/dist"),
+        path: path.resolve(__dirname + "/Client"),
         filename: "bundle.js"
         // library: "MyLibrary"
     },

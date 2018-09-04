@@ -4,6 +4,8 @@
 var Movie = require('./Movie.jsx');
 var Search = require('./Search.jsx');
 var InputMovie = require('./InputMovie.jsx');
+var $ = require('jquery');
+// var request = require('request');
 
 class MovieList extends React.Component {
     constructor(props) {
@@ -13,21 +15,42 @@ class MovieList extends React.Component {
             searchedMovies: this.props.movies,
             query: '',
             newMovie: '',
-            viewingToWatch: true
+            viewingToWatch: true,
+            counter: 6
         };
     }
 
+    componentWillMount() {
+        // this.state.movies
+        // fetch('/movies').then((response) => {
+        //     console.log('i got back a response to the client fetch request');
+        //     console.log('heres the response that I got: ', response.body);
+        // });
+
+        $.ajax({
+            type: 'GET',
+            url: '/movies',
+            contentType: 'application/json',
+            success: (data) => {
+                // var movies = JSON.parse(data);
+                console.log('i got the data from the get request', data);
+                // this.setState({ movies: data, searchedMovies: data });
+            },
+            error: (err) => {
+                console.error(err);
+            }
+
+        })
+    }
+
     componentDidMount() {
-        // console.log('this runs first');
         this.setState(() => {
-            var addWatched = this.prevState.searchedMovies.map((movie) => {
-                // movie['watched'] = false;
+            var addWatched = this.state.searchedMovies.map((movie) => {
                 return { title: movie.title, watched: false }
             });
-            return { searchedMovies: addWatched };
+            return { searchedMovies: addWatched, movies: addWatched };
         }, () => {
         });
-        console.log('this is the state ', this.state);
     }
 
     change(search, e) {
@@ -46,13 +69,29 @@ class MovieList extends React.Component {
             this.setState((prevState, props) => {
                 var updatedMovies = prevState.movies.slice();
                 updatedMovies.push(newMovie);
+                console.log('the updateed movies', updatedMovies);
                 return { movies: updatedMovies, newMovie: '' };
             }, () => {
                 that.state.searchedMovies = that.state.movies;
                 that.search();
-                // console.log('this is the state', this.state);
+                console.log(this.state);
             });
             document.getElementById('movieInputField').value = '';
+
+            var newMovie2 = { title: newMovie.title, listValue: this.counter };
+            this.counter++;
+            $.ajax({
+                type: 'POST',
+                url: '/movies',
+                contentType: 'application/json',
+                data: JSON.stringify(newMovie2),
+                success: (response) => {
+                    console.log('heres the response', response);
+                },
+                error: (err) => {
+                    console.error(err);
+                }
+            });
         }
     }
 
@@ -71,11 +110,8 @@ class MovieList extends React.Component {
     }
 
     toWatched() {
-        this.setState({ viewingToWatch: true }, () => {
-            this.setState(() => {
-                console.log(this.state);
-            })
-        });
+        this.setState({ viewingToWatch: true });
+
         var watchedButton = document.getElementById('watchedButton');
         watchedButton.disabled = true;
         var toWatchButton = document.getElementById('toWatchButton')
@@ -83,28 +119,13 @@ class MovieList extends React.Component {
     }
 
     toWatch() {
-        this.setState({ viewingToWatch: false }, () => {
-            // console.log(this.state.viewingToWatch);
-        });
+        this.setState({ viewingToWatch: false });
+
         var toWatchButton = document.getElementById('toWatchButton');
         toWatchButton.disabled = true;
         var watchedButton = document.getElementById('watchedButton')
         watchedButton.disabled = false;
-
     }
-
-    componentDidUpdate() {
-        // console.log('i got called');
-        var watchedButton = document.getElementById('watchedButton');
-        // console.log('here\'s the watched button', watchedButton);
-        var colors = this.state.viewingToWatch === true ? ['white', 'green'] : ['blue', 'white'];
-        watchedButton.style = `background-color:${colors[1]};color:${colors[0]};`;
-
-        var toWatchButton = document.getElementById('toWatchButton')
-        colors = this.state.viewingToWatch === false ? ['white', 'green'] : ['blue', 'white'];
-        toWatchButton.style = `background-color:${colors[1]};color:${colors[0]};`;
-    }
-
 
     createMovieList(movies, search, viewingToWatch) {
         return movies.map((movie, index) => {
@@ -113,6 +134,17 @@ class MovieList extends React.Component {
         });
     }
 
+    componentDidUpdate() {
+        var viewingToWatch = this.state.viewingToWatch;
+
+        var watchedButton = document.getElementById('watchedButton');
+        var colors = viewingToWatch === true ? ['white', 'green'] : ['blue', 'white'];
+        watchedButton.style = `background-color:${colors[1]};color:${colors[0]};`;
+
+        var toWatchButton = document.getElementById('toWatchButton')
+        colors = viewingToWatch === false ? ['white', 'green'] : ['blue', 'white'];
+        toWatchButton.style = `background-color:${colors[1]};color:${colors[0]};`;
+    }
 
     render() {
         var listOfMovies = this.createMovieList(this.state.searchedMovies, true);
@@ -128,15 +160,7 @@ class MovieList extends React.Component {
             listOfMovies = <div>Sorry, but there are no movies with that name, please search for a different movie!</div>
         }
 
-        // var watchedButton = document.getElementById('watchedButton');
-        // var colors = this.viewingToWatch === false ? ['white', 'green'] : ['blue', 'white'];
-        // watchedButton.style = { color: colors[0], backgroundColor: colors[1] };
-
-        // var toWatchButton = document.getElementById('toWatchButton')
-        // colors = this.toWatchButton === true ? ['white', 'green'] : ['blue', 'white'];
-        // toWatchButton.style = { color: colors[0], backgroundColor: colors[1] };
         return (
-
             <div>
                 <InputMovie changeHandler={this.change.bind(this, false)} inputMovieHandler={this.addMovie.bind(this)} />
                 <button onClick={this.toWatched.bind(this)} id='watchedButton'>Watched</button>
@@ -147,6 +171,5 @@ class MovieList extends React.Component {
         );
     }
 }
-// ReactDOM.render(<MovieList />, document.getElementById('reactContainer'));
 
 module.exports = MovieList;
