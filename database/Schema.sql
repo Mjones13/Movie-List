@@ -1,0 +1,12 @@
+DROP DATABASE IF EXISTS test;
+
+CREATE DATABASE test;
+
+USE test;
+
+CREATE TABLE movies (
+    title VARCHAR(120) UNIQUE,
+    listValue INT NOT NULL AUTO_INCREMENT,
+    PRIMARY KEY (listValue)
+);
+
